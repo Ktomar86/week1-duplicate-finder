@@ -1,3 +1,4 @@
+import argparse
 import hashlib
 from pathlib import Path
 
@@ -47,10 +48,18 @@ def find_duplicate_groups(files):
 
 
 if __name__ == "__main__":
-    files = list_files("test_folder")
+    parser = argparse.ArgumentParser(description="Find duplicate files in a folder based on content, not filename.")
+    parser.add_argument("--folder", required=True, help="Path to the folder to scan for duplicates")
+
+    args = parser.parse_args()
+
+    files = list_files(args.folder)
     duplicates = find_duplicate_groups(files)
 
-    for file_hash, file_list in duplicates.items():
-        print(f"Duplicate group (hash: {file_hash}):")
-        for f in file_list:
-            print(f"  - {f.name}")
+    if not duplicates:
+        print("No duplicates found.")
+    else:
+        for file_hash, file_list in duplicates.items():
+            print(f"Duplicate group (hash: {file_hash}):")
+            for f in file_list:
+                print(f"  - {f.name}")
