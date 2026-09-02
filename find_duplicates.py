@@ -46,10 +46,36 @@ def find_duplicate_groups(files):
 
     return duplicates
 
+def delete_duplicates(duplicates, dry_run=True):
+    """Delete duplicate files, keeping the first file in each group. Returns count of files deleted (or that would be deleted, in dry-run)."""
+    deleted_count = 0
+
+    for file_hash, file_list in duplicates.items():
+        keep_file = file_list[0]
+        files_to_delete = file_list[1:]
+
+        print(f"Keeping: {keep_file.name}")
+
+        for file_path in files_to_delete:
+            if dry_run:
+                print(f"  [DRY RUN] Would delete: {file_path.name}")
+                deleted_count += 1
+            else:
+                try:
+                    file_path.unlink()
+                    print(f"  Deleted: {file_path.name}")
+                    deleted_count += 1
+                except Exception as error:
+                    print(f"  Could not delete {file_path.name}: {error}")
+
+    return deleted_count
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Find duplicate files in a folder based on content, not filename.")
     parser.add_argument("--folder", required=True, help="Path to the folder to scan for duplicates")
+    parser.add_argument("--delete-duplicates", action="store_true", help="Delete duplicate files, keeping one copy of each")
+    parser.add_argument("--dry-run", action="store_true", help="Preview deletions without actually deleting anything")
 
     args = parser.parse_args()
 
@@ -63,3 +89,11 @@ if __name__ == "__main__":
             print(f"Duplicate group (hash: {file_hash}):")
             for f in file_list:
                 print(f"  - {f.name}")
+
+        if args.delete_duplicates:
+            print("\n--- Deletion ---")
+            count = delete_duplicates(duplicates, dry_run=args.dry_run)
+            if args.dry_run:
+                print(f"\n[DRY RUN] Would have deleted {count} file(s).")
+            else:
+                print(f"\nDeleted {count} file(s).")
