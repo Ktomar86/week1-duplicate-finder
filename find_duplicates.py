@@ -25,7 +25,32 @@ def get_file_hash(file_path):
     
     return hasher.hexdigest()
 
+
+def find_duplicate_groups(files):
+    """Group files by content hash. Returns a dict of {hash: [list of duplicate files]}."""
+    hash_map = {}
+
+    for file_path in files:
+        file_hash = get_file_hash(file_path)
+
+        if file_hash not in hash_map:
+            hash_map[file_hash] = []
+
+        hash_map[file_hash].append(file_path)
+
+    duplicates = {}
+    for file_hash, file_list in hash_map.items():
+        if len(file_list) > 1:
+            duplicates[file_hash] = file_list
+
+    return duplicates
+
+
 if __name__ == "__main__":
     files = list_files("test_folder")
-    for f in files:
-        print(f.name)
+    duplicates = find_duplicate_groups(files)
+
+    for file_hash, file_list in duplicates.items():
+        print(f"Duplicate group (hash: {file_hash}):")
+        for f in file_list:
+            print(f"  - {f.name}")
